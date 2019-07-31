@@ -1,5 +1,5 @@
-# gRPC-with-springboot2
-gRPC with springboot2
+# gRPC-with-springboot
+gRPC with springboot
 
 ## gRPC??     
 최근 이직준비를 하면서 걸려온 전화중 흥미로웠던 것이 go와 관련된 회사였다.    
