@@ -1,31 +1,181 @@
-# gRPC-with-springboot
-gRPC with springboot
+# gRPC Basic
 
-## gRPC??     
-최근 이직준비를 하면서 걸려온 전화중 흥미로웠던 것이 go와 관련된 회사였다.    
-일단 자바를 주 메인으로 하는 놈에게 go이야기를 하는것이 흥미로워서 인터뷰는 응했는데 10에 10은 면접중 나온것이 gRPC에 대한 내용이었다.    
+## Prerequisites
 
-듣기만 했던 gRPC를 좀 보면서 몇 가지 느낀 것이 있어서 이와 관련된 간단한 프로젝트를 실행해 보려고 한다.     
-
-무엇보다 느꼈던 첫 번째는 마치 예전 IT에 발담그기 전 학원에서 EJB를 잠깐 공부했는데 마친 Stub코드와 비스무리한 인상을 받았다.    
-또한 WebService (응 아니야 그 웹서비스. WebService SOAP WSDL)를 보는 듯한????     
-
-gRPC히스토리를 보니 구글내부에서 STUBBY라는 이름을 가지고 있었다는데 이 STUBBY가 그 Stub를 말하는건 아니겠지라고 했다가....     
+### Configuration
+- Java 1.8.x
+- IDE: Spring Tool Suite version 3.9.7
 
 
-어째든 .proto라는 곳에 응답 메세지, 서비스를 정의하는 것이 wsdl이랑 비슷하다는 인상을 받았다는 것이다. 물론 다르겠지.
+일단 가이드상의 방식대로 하다보면 많은 부분에서 걸리는게 많다.    
 
-또한 이름은 gRPC-with-springboot2라고 써놨지만 실제로는 gRPC는 server-client로 구성해야한다.    
+무엇보다 pom.xml에 다음과 같이 맞춰주지 않으면 proto를 자바로 제너레이트 할때 오류가 난다.
+
+```
+	<dependency>
+		<groupId>com.google.protobuf</groupId>
+		<artifactId>protobuf-java</artifactId>
+		<version>3.9.0</version>
+	</dependency>
+```
+
+다음과 같이 추가를 해준다.
+
+참고로 모든 설명은 이클립스 STS를 기준으로 설명하고자 한다.    
 
 
-향후 어떻게 변할지 모르겠지만 Restful같은 개념으로 접근하기에는 아직 무리가 있다. 하긴 서비스를 정의하는 일종의 서비스 명세서같이 생겨먹은     
-proto의 형식이라 가이드를 보면 stub으로 호출하는게 맞는 거 같다.
+일단 메이븐 프로젝트를 생성하면 src/main/proto 폴더는 존재하지 않는다.    
+따라서 프로젝트에서 다음 이미지처럼 해서 폴더를 생성한다.
 
 
-다만 내부 서비스를 정의하면 결국 서비스 내부의 비지니스 로직은 작성을 해야하기에 spring이 가지고 있는 막강한 기능들을 써먹을 수 있지 않을까 해서 gRPC-with-springboot2라고 지었다. (모르지 스프링 부트는 안쓸수도....)
+![실행이미지](https://github.com/basquiat78/gRPC-with-springboot/blob/grpc-basic/capture/shot1.png)    
 
-찾아보니 springboot를 이용한 gRpc-spring-starter같은 라이브러리들이 메이븐에 있긴 한데 일단 기본적인 방법을 숙지하고 그런 라이브러리를 이용한든 springboot에 얻어서 사용하든 방법을 강구해 볼 예정이다.     
 
-또한 '전송을 위해 HTTP/2를, 인터페이스 정의 언어로 프로토콜 버퍼를 사용하며 인증, 양방향 스트리밍 및 흐름 제어, 차단 및 비차단 바인딩, 취소 및 타임아웃 등의 기능을 제공한다.' 이렇다고 한다.
+![실행이미지](https://github.com/basquiat78/gRPC-with-springboot/blob/grpc-basic/capture/shot2.png)    
 
-HTTP/2라..... 암튼 재밌겠다~~~
+
+## proto write    
+
+master branch의 README.md에서도 설명했듯이 이것은 일종의 서비스 명세서라고 보며 된다.    
+예제로 사용한 MusicService라는 proto파일로 설명을 해본다.
+
+```
+syntax = "proto3";
+option java_multiple_files = true;
+package grpc;
+
+option java_package = "io.basquiat.grpc";
+
+message MusicRequest {
+    string genre = 1;
+    string musician = 2;
+}
+
+message MusicResponse {
+    string musician = 1;
+    string album = 2;
+}
+
+service MusicService {
+    rpc music(MusicRequest) returns (MusicResponse);
+}
+
+```
+
+syntax는 이것이 proto3라는 것을 명시한다.   
+
+option의 경우에는 보통 다른 쪽에서 사용하는 것을 보면 message만 정의하는 경우가 많은데 그런 경우에는 옵션으로 out_file name을 하나로 만든다.    
+아마도 클래스 내부의 inner class로 객체들을 정의하는 방법이라고 볼 수 있는데 위의 경우처럼 'option java_multiple_files = true'처럼 옵션을 주게 되 message, 또는 service에 정의한 파일명으로 객체를 생성하게 된다.
+
+package는 'src/main/java'밑에 생성한 패키지 명을 따라도 된다. 위의 경우에는 따로 줬지만 실제로는 밑에 준 'option java_package = "io.basquiat.grpc"'처럼 package를 'io.basquiat.grpc'로 설정해도 무방하다.    
+
+
+## Generated-source 생성    
+
+STS에서는 다음 이미지처럼 maven install을 통해서 가능하다.    
+
+![실행이미지](https://github.com/basquiat78/gRPC-with-springboot/blob/grpc-basic/capture/shot3.png)    
+
+성공적으로 maven install이 완료되면 다음 이미지처럼 생성된 코드를 볼 수 있다.    
+
+![실행이미지](https://github.com/basquiat78/gRPC-with-springboot/blob/grpc-basic/capture/shot4.png)    
+
+
+## Service 작성    
+
+프로젝트의 MusicServiceImpl.java를 살펴보자.    
+
+```
+package io.basquiat.grpc.service;
+
+import io.basquiat.grpc.MusicRequest;
+import io.basquiat.grpc.MusicResponse;
+import io.basquiat.grpc.MusicServiceGrpc.MusicServiceImplBase;
+import io.grpc.stub.StreamObserver;
+
+public class MusicServiceImpl extends MusicServiceImplBase {
+
+	@Override
+	public void music(MusicRequest request, StreamObserver<MusicResponse> responseObserver) {
+		System.out.println("ok! I get MusicRequest : " + request);
+	
+		MusicResponse musicResponse = MusicResponse.newBuilder()
+												   .setMusician("John Coltrane")
+												   .setAlbum("Lush Life")
+												   .build();
+		
+		responseObserver.onNext(musicResponse);
+		responseObserver.onCompleted();
+	}
+	
+}
+
+```
+제너레이트 된 소스 중 MusicServiceGrpc클래스 내부의 MusicServiceImplBase를 extends해서 코드를 작성하면 해당 비지니스 로직은 끝난다.    
+
+간단하게 어떤 요청이 들어오면 해당 요청을 콘솔에 찍고 MusicResponse객체에 정보를 담아내면 끝난다.     
+
+
+
+## Call Stub    
+
+GRPCClient.java를 참조하자.    
+
+
+```
+package io.basquiat.grpc.client;
+
+import io.basquiat.grpc.MusicRequest;
+import io.basquiat.grpc.MusicResponse;
+import io.basquiat.grpc.MusicServiceGrpc;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+
+public class GRPCClient {
+    
+	public static void main(String[] args) throws InterruptedException {
+		ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 8080)
+													  .usePlaintext()
+													  .build();
+		MusicServiceGrpc.MusicServiceBlockingStub stub = MusicServiceGrpc.newBlockingStub(channel);
+		MusicRequest musicRequest = MusicRequest.newBuilder()
+												.setGenre("Jazz")
+												.setMusician("John Coltrane")
+												.build();
+		MusicResponse musicResponse = stub.music(musicRequest);
+		System.out.println("received response : " + musicResponse);
+		channel.shutdown();
+	}
+
+}
+
+```
+
+코드 흐름은 채널을 생성해서 그 채널을 통해 Stub를 주고 받는 방식으로 되어 있다.    
+Stub을 통해서 요청 정보를 넘기고 MusicService.proto에서 설정했던 서비스 music을 통해서 응답을 받아서 콘솔에 찍는다.   
+
+
+## At A Glance    
+
+확실히 Stub/Skeleton을 떠올리게 만든다.    
+장점이 많다고 하는데 밑에 글을 통해서 확인해 보면 되겠다.
+
+
+[Microservices with gRPC](https://medium.com/@goinhacker/microservices-with-grpc-d504133d191d)    
+
+
+
+[gRPC란 무엇이고 어떻게 구성되나요?](https://widian.github.io/blog/2018/11/23/grdc-%EC%A0%95%EB%A6%AC.html)    
+
+
+몇 가지 드는 생각은 '이걸 왜 쓰지?'가 먼저였다.    
+
+굳이 쓸 이유가 있을까 생각이 드는데 위에 글들을 보면 결국 MSA에 최적화된 것이 아닌가 싶다.    
+
+자바 진영에서 바라볼 때는 좀 불편하다는 생각도 드는데 다만 이런 점은 확실히 강점이다.    
+
+1. 서비스에 필요한 것들을 proto를 통해 정의한다. 필요한 요청/응답 도메인을 작성하고 서비스를 정의한다.    
+2. 이렇게 정의된 proto를 서버/클라이언트가 공유하면서 로직의 흐름이 깨지지 않는다는 것.    
+
+
+그러나 만일 응답/요청 도메인이 변경된다면 어떻게 되나??라는 생각이 먼저 드네?   

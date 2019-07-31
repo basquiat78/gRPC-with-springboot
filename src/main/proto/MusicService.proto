@@ -1,0 +1,19 @@
+syntax = "proto3";
+option java_multiple_files = true;
+package grpc;
+
+option java_package = "io.basquiat.grpc";
+
+message MusicRequest {
+    string genre = 1;
+    string musician = 2;
+}
+
+message MusicResponse {
+    string musician = 1;
+    string album = 2;
+}
+
+service MusicService {
+    rpc music(MusicRequest) returns (MusicResponse);
+}
