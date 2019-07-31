@@ -152,7 +152,10 @@ public class GRPCClient {
 ```
 
 코드 흐름은 채널을 생성해서 그 채널을 통해 Stub를 주고 받는 방식으로 되어 있다.    
-Stub을 통해서 요청 정보를 넘기고 MusicService.proto에서 설정했던 서비스 music을 통해서 응답을 받아서 콘솔에 찍는다.   
+Stub을 통해서 요청 정보를 넘기고 MusicService.proto에서 설정했던 서비스 music을 통해서 응답을 받아서 콘솔에 찍는다.    
+
+특이한 것은 message로 정의한 객체들은 빌더패턴이 적용된다. 다만 get이 붙는게 좀 맘에 안들 뿐이다.    
+커스터마이징 할 수 있다는데 거기까진 아직....
 
 
 ## At A Glance    
