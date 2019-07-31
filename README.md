@@ -198,4 +198,7 @@ Stub을 통해서 요청 정보를 넘기고 MusicService.proto에서 설정했�
 간단하다는 의미이다. 근데 gRPC는 1:N, 양방향 통신이 가능하다.    
 즉, newBlockingStub, newStub, newFutureStub를 제공한다.    
 관련 통신방식에 대해서 적용해 볼 예정이다.
-스트림으로 통신하는 방식등은 proto에 정의하기 때문에 관련 부분도 바뀔 것이다.
+
+--> newStub, newBlockingStub	 테스트 예제 추가 완료   
+    newFutureStub의 경우에는 동기랑 좀 비슷하네? 라는 생각이 들어서 일단은 패쓰...
+    다음은 양방향 통신 관련 로직을 구현해 볼 예정이다. 
